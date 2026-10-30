@@ -280,7 +280,12 @@ class RestorePreparationTests(unittest.TestCase):
         runtime = Path(self.data['storage'])
         current = runtime / 'work.qcow2'
         saved = current.read_bytes()
-        current.unlink(); current.write_bytes(saved)
+        original_identity = self._id(current)
+        displaced = self.root / 'displaced-work.qcow2'
+        current.rename(displaced)
+        current.write_bytes(saved)
+        self.assertEqual(self._id(displaced), original_identity)
+        self.assertNotEqual(self._id(current), original_identity)
         with self._firmware(), self.assertRaises(LabError) as caught:
             self.manager.prepare('arch-test', self.baseline['baseline_id'],
                                  self.operation, self.deadline)

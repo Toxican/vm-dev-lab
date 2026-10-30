@@ -656,7 +656,11 @@ class LifecycleTests(unittest.TestCase):
 
     def test_failed_create_cleanup_rejects_inode_change(self):
         source,_=self._failed_create(); runtime=Path(self.data['storage'])
-        original=runtime/'work.qcow2'; original.unlink(); self._write(original,b'replaced')
+        original=runtime/'work.qcow2'; original_identity=self._id(original)
+        displaced=self.root/'displaced-work.qcow2'; original.rename(displaced)
+        self._write(original,b'replaced')
+        self.assertEqual(self._id(displaced),original_identity)
+        self.assertNotEqual(self._id(original),original_identity)
         with self.assertRaises(LabError) as caught: self._recover(source)
         self.assertEqual(caught.exception.detail['code'],'OWNERSHIP_MISMATCH')
 
