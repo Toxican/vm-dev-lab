@@ -1,0 +1,654 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://vm-dev-lab.invalid/schemas/host-setup-result-v1.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "artifact_type", "tool_version", "generated_at", "stage", "status", "verification_level", "host_binding", "catalog", "checks", "summary", "planned_action", "plan_sha256", "notice"],
+  "properties": {
+    "schema_version": {"const": 1},
+    "artifact_type": {"enum": ["package-check", "package-plan", "package-apply", "environment-check", "environment-plan", "environment-apply", "environment-resource-plan", "environment-resource-apply", "environment-uninstall-check", "environment-uninstall-plan", "environment-uninstall-apply"]},
+    "tool_version": {"type": "string", "minLength": 1},
+    "generated_at": {"type": "string", "format": "date-time"},
+    "stage": {"enum": ["packages", "environment"]},
+    "status": {"$ref": "#/$defs/status"},
+    "verification_level": {"enum": ["passive", "active"]},
+    "host_binding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["machine_id_sha256", "architecture", "os", "package_manager"],
+      "properties": {
+        "machine_id_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "architecture": {"type": ["string", "null"]},
+        "os": {
+          "type": "object", "additionalProperties": false,
+          "required": ["id", "name", "id_like"],
+          "properties": {
+            "id": {"type": ["string", "null"]},
+            "name": {"type": ["string", "null"]},
+            "id_like": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          }
+        },
+        "package_manager": {
+          "type": "object", "additionalProperties": false,
+          "required": ["name", "path"],
+          "properties": {"name": {"const": "pacman"}, "path": {"type": ["string", "null"]}}
+        }
+      }
+    },
+    "catalog": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "version"],
+      "properties": {"name": {"const": "arch-system-packages"}, "version": {"const": 1}}
+    },
+    "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}, "minItems": 1},
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fulfilled_packages", "missing_packages", "conflicts", "blocking_checks"],
+      "properties": {
+        "fulfilled_packages": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "missing_packages": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "conflicts": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "blocking_checks": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "planned_action": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["argv", "packages", "impact", "requires_separate_approval"],
+          "properties": {
+            "argv": {"type": "array", "items": {"type": "string"}, "minItems": 5},
+            "packages": {"type": "array", "items": {"type": "string"}, "minItems": 1, "uniqueItems": true},
+            "impact": {"type": "string", "minLength": 1},
+            "requires_separate_approval": {"const": true}
+          }
+        }
+      ]
+    },
+    "plan_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+    "notice": {"type": "string", "minLength": 1},
+    "completed_at": {"type": ["string", "null"], "format": "date-time"},
+    "operation_id": {"type": "string", "pattern": "^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$"},
+    "confirmed_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "precondition_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "start_status": {"enum": ["not-started", "started"]},
+    "end_status": {"enum": ["rejected", "failed", "unknown", "verified"]},
+    "execution": {
+      "oneOf": [
+        {"type": "null"},
+        {
+          "type": "object", "additionalProperties": false,
+          "required": ["pacman_argv", "started", "returncode", "outcome", "error_reason", "output_capture"],
+          "properties": {
+            "pacman_argv": {"type": "array", "items": {"type": "string"}, "minItems": 5},
+            "started": {"type": "boolean"},
+            "returncode": {"type": ["integer", "null"]},
+            "outcome": {"enum": ["not-started", "succeeded", "failed", "unknown"]},
+            "error_reason": {"$ref": "#/$defs/nullableText"},
+            "output_capture": {"const": "none-interactive-terminal"}
+          }
+        },
+        {"$ref": "#/$defs/environmentExecution"},
+        {"$ref": "#/$defs/resourceExecution"},
+        {"$ref": "#/$defs/uninstallExecution"}
+      ]
+    },
+    "post_verification": {
+      "oneOf": [
+        {"$ref": "#/$defs/postVerification"},
+        {"$ref": "#/$defs/environmentPostVerification"},
+        {"$ref": "#/$defs/uninstallPostVerification"}
+      ]
+    },
+    "identity_context": {
+      "oneOf": [
+        {"$ref": "#/$defs/identityContext"},
+        {"$ref": "#/$defs/environmentIdentityContext"},
+        {"$ref": "#/$defs/resourceIdentityContext"},
+        {"$ref": "#/$defs/uninstallIdentityContext"}
+      ]
+    },
+    "environment_summary": {"$ref": "#/$defs/environmentSummary"},
+    "environment_plan": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/environmentPlan"}
+      ]
+    },
+    "resource_state": {"enum": ["fresh", "complete", "pending", "partial", "invalid", "foreign-or-conflicting", "prerequisite-blocked", "unknown"]},
+    "resource_plan": {"type": ["object", "null"]},
+    "environment_prerequisites": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}, "minItems": 1},
+    "resource_summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["planned_changes", "record_status"],
+      "properties": {
+        "planned_changes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "record_status": {"type": ["string", "null"]}
+      }
+    },
+    "uninstall_state": {"enum": ["qualified", "blocked", "rejected", "partial", "removed"]},
+    "uninstall_inventory": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/uninstallInventory"}
+      ]
+    },
+    "uninstall_plan": {
+      "oneOf": [
+        {"type": "null"},
+        {"$ref": "#/$defs/uninstallPlan"}
+      ]
+    },
+    "manual_actions": {"type": "array", "items": {"type": "string", "minLength": 1}, "uniqueItems": true},
+    "documentation": {"type": "array", "items": {"type": "string", "pattern": "^[^#]+#[a-z0-9-]+$"}, "minItems": 1, "uniqueItems": true}
+  },
+  "allOf": [
+    {
+      "if": {"properties": {"artifact_type": {"const": "package-check"}}},
+      "then": {
+        "not": {"$ref": "#/$defs/applyOnlyPresence"},
+        "properties": {
+          "stage": {"const": "packages"},
+          "verification_level": {"const": "passive"},
+          "planned_action": {"type": "null"},
+          "plan_sha256": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "package-plan"}}},
+      "then": {
+        "not": {"$ref": "#/$defs/applyOnlyPresence"},
+        "properties": {
+          "stage": {"const": "packages"},
+          "verification_level": {"const": "passive"},
+          "plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "package-apply"}}},
+      "then": {
+        "required": ["completed_at", "operation_id", "identity_context", "confirmed_plan_sha256", "precondition_plan_sha256", "start_status", "end_status", "execution", "post_verification", "manual_actions", "documentation"],
+        "properties": {
+          "stage": {"const": "packages"},
+          "verification_level": {"const": "active"},
+          "planned_action": {"type": "object"},
+          "plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "environment-check"}}},
+      "then": {
+        "required": ["operation_id", "environment_summary", "environment_plan"],
+        "properties": {
+          "stage": {"const": "environment"},
+          "verification_level": {"const": "passive"},
+          "checks": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}, "minItems": 1},
+          "planned_action": {"type": "null"},
+          "environment_plan": {"type": "null"},
+          "plan_sha256": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "environment-plan"}}},
+      "then": {
+        "required": ["operation_id", "environment_summary", "environment_plan"],
+        "properties": {
+          "stage": {"const": "environment"},
+          "verification_level": {"const": "passive"},
+          "checks": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}, "minItems": 1},
+          "planned_action": {"type": "null"},
+          "environment_plan": {"type": "object"},
+          "plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "environment-apply"}}},
+      "then": {
+        "required": ["completed_at", "operation_id", "identity_context", "environment_summary", "environment_plan", "confirmed_plan_sha256", "precondition_plan_sha256", "start_status", "end_status", "execution", "post_verification", "manual_actions", "documentation"],
+        "properties": {
+          "stage": {"const": "environment"},
+          "verification_level": {"const": "active"},
+          "checks": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}, "minItems": 1},
+          "planned_action": {"type": "null"},
+          "environment_plan": {"type": "object"},
+          "plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "identity_context": {"$ref": "#/$defs/environmentIdentityContext"},
+          "execution": {
+            "oneOf": [
+              {"type": "null"},
+              {"$ref": "#/$defs/environmentExecution"}
+            ]
+          },
+          "post_verification": {"$ref": "#/$defs/environmentPostVerification"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "environment-resource-plan"}}},
+      "then": {
+        "required": ["operation_id", "resource_state", "resource_plan", "resource_summary", "environment_prerequisites", "documentation"],
+        "properties": {
+          "stage": {"const": "environment"},
+          "verification_level": {"const": "active"},
+          "checks": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}, "minItems": 1},
+          "planned_action": {"type": "null"},
+          "plan_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "environment-resource-apply"}}},
+      "then": {
+        "required": ["completed_at", "operation_id", "identity_context", "confirmed_plan_sha256", "end_status", "execution", "manual_actions", "resource_state", "resource_plan", "resource_summary", "environment_prerequisites", "documentation"],
+        "properties": {
+          "stage": {"const": "environment"},
+          "verification_level": {"const": "active"},
+          "checks": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}, "minItems": 1},
+          "planned_action": {"type": "null"},
+          "plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "identity_context": {"$ref": "#/$defs/resourceIdentityContext"},
+          "execution": {"$ref": "#/$defs/resourceExecution"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "environment-uninstall-check"}}},
+      "then": {
+        "required": ["operation_id", "uninstall_state", "uninstall_inventory", "uninstall_plan", "documentation"],
+        "properties": {
+          "stage": {"const": "environment"},
+          "verification_level": {"const": "active"},
+          "checks": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}, "minItems": 1},
+          "planned_action": {"type": "null"},
+          "plan_sha256": {"type": "null"},
+          "uninstall_plan": {"type": "null"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "environment-uninstall-plan"}}},
+      "then": {
+        "required": ["operation_id", "uninstall_state", "uninstall_inventory", "uninstall_plan", "documentation"],
+        "properties": {
+          "stage": {"const": "environment"},
+          "verification_level": {"const": "active"},
+          "checks": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}, "minItems": 1},
+          "planned_action": {"type": "null"},
+          "plan_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+        }
+      }
+    },
+    {
+      "if": {"properties": {"artifact_type": {"const": "environment-uninstall-apply"}}},
+      "then": {
+        "required": ["completed_at", "operation_id", "identity_context", "confirmed_plan_sha256", "precondition_plan_sha256", "start_status", "end_status", "execution", "post_verification", "manual_actions", "uninstall_state", "uninstall_inventory", "uninstall_plan", "documentation"],
+        "properties": {
+          "stage": {"const": "environment"},
+          "verification_level": {"const": "active"},
+          "checks": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}, "minItems": 1},
+          "planned_action": {"type": "null"},
+          "plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "identity_context": {"$ref": "#/$defs/uninstallIdentityContext"},
+          "execution": {"$ref": "#/$defs/uninstallExecution"},
+          "post_verification": {"$ref": "#/$defs/uninstallPostVerification"}
+        }
+      }
+    }
+  ],
+  "$defs": {
+    "status": {"enum": ["PASS", "ACTION_REQUIRED", "MANUAL_REQUIRED", "BLOCKED", "FAILED"]},
+    "nullableText": {"type": ["string", "null"]},
+    "applyOnlyPresence": {
+      "anyOf": [
+        {"required": ["completed_at"]},
+        {"required": ["operation_id"]},
+        {"required": ["identity_context"]},
+        {"required": ["confirmed_plan_sha256"]},
+        {"required": ["precondition_plan_sha256"]},
+        {"required": ["start_status"]},
+        {"required": ["end_status"]},
+        {"required": ["execution"]},
+        {"required": ["post_verification"]},
+        {"required": ["manual_actions"]},
+        {"required": ["documentation"]}
+      ]
+    },
+    "postVerification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["performed", "status", "host_binding", "checks", "summary"],
+      "properties": {
+        "performed": {"type": "boolean"},
+        "status": {"oneOf": [{"$ref": "#/$defs/status"}, {"type": "null"}]},
+        "host_binding": {"oneOf": [{"$ref": "#/$defs/hostBinding"}, {"type": "null"}]},
+        "checks": {"type": "array", "items": {"$ref": "#/$defs/check"}},
+        "summary": {"oneOf": [{"$ref": "#/$defs/summary"}, {"type": "null"}]}
+      }
+    },
+    "identityContext": {
+      "type": "object", "additionalProperties": false,
+      "required": ["effective_administrator_uid", "operator_identity", "operator_source", "sudo_hint_status", "sudo_hint_used_for_ownership", "qemu_service_identity"],
+      "properties": {
+        "effective_administrator_uid": {"const": 0},
+        "operator_identity": {"type": "null"},
+        "operator_source": {"const": "not-resolved-by-packages-apply"},
+        "sudo_hint_status": {"enum": ["absent", "present-unverified", "invalid-ignored"]},
+        "sudo_hint_used_for_ownership": {"const": false},
+        "qemu_service_identity": {"type": "null"}
+      }
+    },
+    "environmentIdentityContext": {
+      "type": "object", "additionalProperties": false,
+      "required": ["effective_administrator_uid", "operator_identity", "operator_source", "sudo_hint_used_for_ownership", "qemu_service_identity"],
+      "properties": {
+        "effective_administrator_uid": {"const": 0},
+        "operator_identity": {"type": "null"},
+        "operator_source": {"const": "validated-by-environment-preflight"},
+        "sudo_hint_used_for_ownership": {"const": false},
+        "qemu_service_identity": {"type": "null"}
+      }
+    },
+    "resourceIdentityContext": {
+      "type": "object", "additionalProperties": false,
+      "required": ["effective_administrator_uid", "operator_identity", "operator_source", "sudo_hint_used_for_ownership", "qemu_service_identity"],
+      "properties": {
+        "effective_administrator_uid": {"const": 0},
+        "operator_identity": {"$ref": "#/$defs/resourceIdentity"},
+        "operator_source": {"const": "confirmed-resource-plan"},
+        "sudo_hint_used_for_ownership": {"const": false},
+        "qemu_service_identity": {"$ref": "#/$defs/resourceIdentity"}
+      }
+    },
+    "resourceIdentity": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "uid", "gid"],
+      "properties": {
+        "name": {"type": "string", "pattern": "^[a-z_][a-z0-9_-]{0,31}$"},
+        "uid": {"type": "integer", "minimum": 1},
+        "gid": {"type": "integer", "minimum": 1}
+      }
+    },
+    "uninstallIdentityContext": {
+      "type": "object", "additionalProperties": false,
+      "required": ["effective_administrator_uid", "operator_identity", "operator_source", "sudo_hint_used_for_ownership", "qemu_service_identity"],
+      "properties": {
+        "effective_administrator_uid": {"const": 0},
+        "operator_identity": {"$ref": "#/$defs/resourceIdentity"},
+        "operator_source": {"const": "confirmed-uninstall-plan"},
+        "sudo_hint_used_for_ownership": {"const": false},
+        "qemu_service_identity": {"$ref": "#/$defs/resourceIdentity"}
+      }
+    },
+    "uninstallPostVerification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["performed", "status", "network_absent", "pool_absent", "storage_absent", "removed_record", "firewall_unchanged"],
+      "properties": {
+        "performed": {"type": "boolean"},
+        "status": {"oneOf": [{"const": "PASS"}, {"type": "null"}]},
+        "network_absent": {"type": "boolean"},
+        "pool_absent": {"type": "boolean"},
+        "storage_absent": {"type": "boolean"},
+        "removed_record": {"type": "boolean"},
+        "firewall_unchanged": {"type": "boolean"}
+      }
+    },
+    "environmentPostVerification": {
+      "type": "object", "additionalProperties": false,
+      "required": ["performed", "status", "host_binding", "checks", "summary", "environment_summary"],
+      "properties": {
+        "performed": {"type": "boolean"},
+        "status": {"oneOf": [{"$ref": "#/$defs/status"}, {"type": "null"}]},
+        "host_binding": {"oneOf": [{"$ref": "#/$defs/hostBinding"}, {"type": "null"}]},
+        "checks": {"type": "array", "items": {"$ref": "#/$defs/environmentCheck"}},
+        "summary": {"oneOf": [{"$ref": "#/$defs/summary"}, {"type": "null"}]},
+        "environment_summary": {"oneOf": [{"$ref": "#/$defs/environmentSummary"}, {"type": "null"}]}
+      }
+    },
+    "environmentExecution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["actions", "successful_actions", "failed_actions", "not_executed_actions", "unknown_actions", "output_capture"],
+      "properties": {
+        "actions": {"type": "array", "items": {"$ref": "#/$defs/environmentActionResult"}, "maxItems": 3},
+        "successful_actions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "failed_actions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "not_executed_actions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "unknown_actions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "output_capture": {"const": "none"}
+      }
+    },
+    "resourceExecution": {
+      "type": "object", "additionalProperties": false,
+      "required": ["outcome", "message"],
+      "properties": {
+        "outcome": {"enum": ["succeeded", "failed"]},
+        "message": {"type": "string", "minLength": 1}
+      }
+    },
+    "uninstallExecution": {
+      "type": "array", "minItems": 3, "maxItems": 5,
+      "items": {"$ref": "#/$defs/uninstallActionResult"}
+    },
+    "uninstallActionResult": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "outcome", "error_reason"],
+      "properties": {
+        "id": {"enum": ["pool-autostart-disabled", "network-autostart-disabled", "pool-undefined", "network-undefined", "storage-directory-removed"]},
+        "outcome": {"enum": ["succeeded", "not-executed", "unknown"]},
+        "error_reason": {"$ref": "#/$defs/nullableText"}
+      }
+    },
+    "uninstallInventory": {
+      "type": "object", "additionalProperties": false,
+      "required": ["host_id", "setup_id", "original_plan_sha256", "original_record_sha256", "owner", "qemu", "record_status", "network", "pool", "domain_references", "storage", "firewall", "lock_available"],
+      "properties": {
+        "host_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "setup_id": {"type": "string", "format": "uuid"},
+        "original_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "original_record_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "owner": {"$ref": "#/$defs/resourceIdentity"},
+        "qemu": {"$ref": "#/$defs/resourceIdentity"},
+        "record_status": {"const": "complete"},
+        "network": {"$ref": "#/$defs/uninstallResource"},
+        "pool": {"$ref": "#/$defs/uninstallPool"},
+        "domain_references": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "storage": {"$ref": "#/$defs/uninstallStorage"},
+        "firewall": {"$ref": "#/$defs/uninstallFirewall"},
+        "lock_available": {"const": true}
+      }
+    },
+    "uninstallResource": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "uuid", "xml", "active", "autostart"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "uuid": {"type": "string", "format": "uuid"},
+        "xml": {"type": "string", "minLength": 1},
+        "active": {"const": false},
+        "autostart": {"type": "boolean"}
+      }
+    },
+    "uninstallPool": {
+      "type": "object", "additionalProperties": false,
+      "required": ["name", "uuid", "xml", "active", "autostart", "volumes"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1},
+        "uuid": {"type": "string", "format": "uuid"},
+        "xml": {"type": "string", "minLength": 1},
+        "active": {"const": false},
+        "autostart": {"type": "boolean"},
+        "volumes": {"type": "array", "maxItems": 0}
+      }
+    },
+    "uninstallStorage": {
+      "type": "object", "additionalProperties": false,
+      "required": ["path", "device", "inode", "uid", "gid", "entries", "mounts", "acl"],
+      "properties": {
+        "path": {"type": "string", "pattern": "^/"},
+        "device": {"type": "integer", "minimum": 0},
+        "inode": {"type": "integer", "minimum": 1},
+        "uid": {"type": "integer", "minimum": 1},
+        "gid": {"type": "integer", "minimum": 1},
+        "entries": {"type": "array", "maxItems": 0},
+        "mounts": {"type": "array", "maxItems": 0},
+        "acl": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 10, "uniqueItems": true}
+      }
+    },
+    "uninstallFirewall": {
+      "type": "object", "additionalProperties": false,
+      "required": ["trusted-lab", "legacy"],
+      "properties": {
+        "trusted-lab": {"enum": ["absent", "removed"]},
+        "legacy": {"enum": ["absent", "removed"]}
+      }
+    },
+    "uninstallPlan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["host_id", "setup_id", "original_plan_sha256", "original_record_sha256", "network_uuid", "pool_uuid", "storage_identity", "acl", "firewall", "steps", "documentation"],
+      "properties": {
+        "host_id": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "setup_id": {"type": "string", "format": "uuid"},
+        "original_plan_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "original_record_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "network_uuid": {"type": "string", "format": "uuid"},
+        "pool_uuid": {"type": "string", "format": "uuid"},
+        "storage_identity": {
+          "type": "object", "additionalProperties": false,
+          "required": ["path", "device", "inode", "uid", "gid"],
+          "properties": {
+            "path": {"type": "string", "pattern": "^/"},
+            "device": {"type": "integer", "minimum": 0},
+            "inode": {"type": "integer", "minimum": 1},
+            "uid": {"type": "integer", "minimum": 1},
+            "gid": {"type": "integer", "minimum": 1}
+          }
+        },
+        "acl": {"type": "array", "items": {"type": "string", "minLength": 1}, "minItems": 10, "uniqueItems": true},
+        "firewall": {"$ref": "#/$defs/uninstallFirewall"},
+        "steps": {"type": "array", "minItems": 3, "maxItems": 5, "items": {"enum": ["pool-autostart-disabled", "network-autostart-disabled", "pool-undefined", "network-undefined", "storage-directory-removed"]}, "uniqueItems": true},
+        "documentation": {"const": "docs/HOST-SETUP.md#hostressourcen-sicher-entfernen"}
+      }
+    },
+    "environmentActionResult": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "unit", "argv", "started", "returncode", "outcome", "error_reason"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^environment\\.action\\.start-(virtqemud|virtnetworkd|virtstoraged)$"},
+        "unit": {"enum": ["virtqemud.socket", "virtnetworkd.socket", "virtstoraged.socket"]},
+        "argv": {
+          "type": "array", "prefixItems": [
+            {"const": "/usr/bin/systemctl"}, {"const": "start"},
+            {"enum": ["virtqemud.socket", "virtnetworkd.socket", "virtstoraged.socket"]}
+          ], "items": false, "minItems": 3, "maxItems": 3
+        },
+        "started": {"type": "boolean"},
+        "returncode": {"type": ["integer", "null"]},
+        "outcome": {"enum": ["succeeded", "failed", "not-executed", "unknown"]},
+        "error_reason": {"$ref": "#/$defs/nullableText"}
+      }
+    },
+    "environmentSummary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["planned_changes", "manual_decisions", "security_blockers", "not_actively_verified", "host_record_setup_id"],
+      "properties": {
+        "planned_changes": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "manual_decisions": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "security_blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "not_actively_verified": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "host_record_setup_id": {"type": ["string", "null"], "format": "uuid"}
+      }
+    },
+    "environmentPlan": {
+      "type": "object", "additionalProperties": false,
+      "required": ["changes", "manual_decisions", "security_blockers"],
+      "properties": {
+        "changes": {"type": "array", "items": {"$ref": "#/$defs/environmentChange"}},
+        "manual_decisions": {"type": "array", "items": {"$ref": "#/$defs/manualDecision"}},
+        "security_blockers": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "environmentChange": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "kind", "argv", "requires_root", "precondition_check", "impact", "documentation"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]+$"},
+        "kind": {"const": "systemd-socket-runtime-start"},
+        "argv": {"type": "array", "items": {"type": "string"}, "minItems": 3},
+        "requires_root": {"const": true},
+        "precondition_check": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]+$"},
+        "impact": {"type": "string", "minLength": 1},
+        "documentation": {"type": "string", "pattern": "^[^#]+#[a-z0-9-]+$"}
+      }
+    },
+    "manualDecision": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "reason", "manual_action", "documentation"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]+$"},
+        "reason": {"type": "string", "minLength": 1},
+        "manual_action": {"type": ["string", "null"]},
+        "documentation": {"type": "string", "pattern": "^[^#]+#[a-z0-9-]+$"}
+      }
+    },
+    "hostBinding": {
+      "type": "object", "additionalProperties": false,
+      "required": ["machine_id_sha256", "architecture", "os", "package_manager"],
+      "properties": {
+        "machine_id_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"},
+        "architecture": {"type": ["string", "null"]},
+        "os": {
+          "type": "object", "additionalProperties": false,
+          "required": ["id", "name", "id_like"],
+          "properties": {
+            "id": {"type": ["string", "null"]},
+            "name": {"type": ["string", "null"]},
+            "id_like": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+          }
+        },
+        "package_manager": {
+          "type": "object", "additionalProperties": false,
+          "required": ["name", "path"],
+          "properties": {"name": {"const": "pacman"}, "path": {"type": ["string", "null"]}}
+        }
+      }
+    },
+    "summary": {
+      "type": "object", "additionalProperties": false,
+      "required": ["fulfilled_packages", "missing_packages", "conflicts", "blocking_checks"],
+      "properties": {
+        "fulfilled_packages": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "missing_packages": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "conflicts": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+        "blocking_checks": {"type": "array", "items": {"type": "string"}, "uniqueItems": true}
+      }
+    },
+    "check": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "status", "required", "package", "purpose", "observed", "proposed_change", "executed_change", "error_reason", "documentation", "manual_action"],
+      "properties": {
+        "id": {"type": "string", "pattern": "^[a-z0-9][a-z0-9.-]+$"},
+        "status": {"$ref": "#/$defs/status"},
+        "required": {"type": "boolean"},
+        "package": {"type": ["string", "null"]},
+        "purpose": {"type": "string", "minLength": 1},
+        "observed": {"type": "string", "minLength": 1},
+        "proposed_change": {"$ref": "#/$defs/nullableText"},
+        "executed_change": {"type": "null"},
+        "error_reason": {"$ref": "#/$defs/nullableText"},
+        "documentation": {"type": "string", "pattern": "^[^#]+#[a-z0-9-]+$"},
+        "manual_action": {"$ref": "#/$defs/nullableText"},
+        "evidence_level": {"enum": ["present", "passive", "active", "not-checked"]},
+        "reason": {"type": "string", "minLength": 1}
+      }
+    },
+    "environmentCheck": {
+      "allOf": [
+        {"$ref": "#/$defs/check"},
+        {"required": ["evidence_level", "reason"]}
+      ]
+    }
+  }
+}

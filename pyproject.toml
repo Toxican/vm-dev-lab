@@ -1,0 +1,34 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Configure Python packaging, dependencies, and command entry points.
+
+[build-system]
+requires = ["setuptools>=77"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "vm-dev-lab"
+dynamic = ["version"]
+description = "Security-oriented management of reproducible Linux development VMs with libvirt"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+dependencies = ["PyYAML>=6.0", "Jinja2>=3.1", "jsonschema>=4.18"]
+
+[project.optional-dependencies]
+libvirt = ["libvirt-python>=9.0"]
+
+[project.scripts]
+vmctl = "vm_dev_lab.cli:main"
+host-setup = "vm_dev_lab.host_setup.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+vm_dev_lab = ["schema.json", "result-schema.json"]
+"vm_dev_lab.host_setup" = ["result-schema.json"]
+
+[tool.setuptools.dynamic]
+version = {attr = "vm_dev_lab.version.VERSION"}

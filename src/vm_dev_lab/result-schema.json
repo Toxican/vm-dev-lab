@@ -1,0 +1,498 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "operation_id": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$"
+    },
+    "ok": {
+      "type": "boolean"
+    },
+    "command": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "vm": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "uuid": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      },
+      "required": [
+        "name",
+        "uuid"
+      ],
+      "additionalProperties": false
+    },
+    "state": {
+      "enum": [
+        "failed",
+        "validated",
+        "planned",
+        "completed"
+      ]
+    },
+    "data": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "lifecycle": {
+              "type": "object"
+            }
+          },
+          "required": [
+            "lifecycle"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "help": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "required": [
+            "help"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "config": {
+              "type": "object"
+            },
+            "origins": {
+              "type": "object",
+              "additionalProperties": {
+                "type": "string"
+              }
+            },
+            "incomplete": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1
+              }
+            },
+            "verified_for_execution": {
+              "const": false
+            },
+            "plan": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "const": "create"
+                },
+                "dry_run": {
+                  "const": true
+                },
+                "can_execute": {
+                  "const": false
+                },
+                "target": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "uuid": {
+                      "type": "null"
+                    }
+                  },
+                  "required": [
+                    "name",
+                    "uuid"
+                  ],
+                  "additionalProperties": false
+                },
+                "requested": {
+                  "type": "object",
+                  "properties": {
+                    "cpus": {
+                      "type": "integer"
+                    },
+                    "memory_mib": {
+                      "type": "integer"
+                    },
+                    "disk_gib": {
+                      "type": "integer"
+                    },
+                    "network": {
+                      "type": "object"
+                    },
+                    "image": {
+                      "type": "object"
+                    },
+                    "packages": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
+                    },
+                    "no_start": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "cpus",
+                    "memory_mib",
+                    "disk_gib",
+                    "network",
+                    "image",
+                    "packages",
+                    "no_start"
+                  ],
+                  "additionalProperties": false
+                },
+                "steps": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "phase": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "status": {
+                        "enum": [
+                          "completed",
+                          "planned",
+                          "unverified"
+                        ]
+                      },
+                      "description": {
+                        "type": "string",
+                        "minLength": 1
+                      }
+                    },
+                    "required": [
+                      "phase",
+                      "status",
+                      "description"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "checks": {
+                  "type": "object",
+                  "properties": {
+                    "image_trust": {
+                      "const": "unverified"
+                    },
+                    "host_capabilities": {
+                      "const": "unverified"
+                    },
+                    "network_identity": {
+                      "const": "unverified"
+                    },
+                    "storage_access": {
+                      "const": "unverified"
+                    },
+                    "ownership": {
+                      "const": "unverified"
+                    },
+                    "resource_budget": {
+                      "const": "unverified"
+                    },
+                    "ssh_bootstrap": {
+                      "const": "unverified"
+                    },
+                    "cloud_init": {
+                      "const": "unverified"
+                    },
+                    "project_readiness": {
+                      "const": "unverified"
+                    }
+                  },
+                  "required": [
+                    "image_trust",
+                    "host_capabilities",
+                    "network_identity",
+                    "storage_access",
+                    "ownership",
+                    "resource_budget",
+                    "ssh_bootstrap",
+                    "cloud_init",
+                    "project_readiness"
+                  ],
+                  "additionalProperties": false
+                },
+                "blocked_by": {
+                  "type": "array",
+                  "items": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                },
+                "notice": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "kind",
+                "dry_run",
+                "can_execute",
+                "target",
+                "requested",
+                "steps",
+                "checks",
+                "blocked_by",
+                "notice"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "config",
+            "origins",
+            "incomplete",
+            "verified_for_execution"
+          ],
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "properties": {
+            "host": {
+              "type": "object",
+              "properties": {
+                "uri": {
+                  "enum": [
+                    "qemu:///system",
+                    "qemu:///session"
+                  ]
+                },
+                "operating_model": {
+                  "enum": [
+                    "manual",
+                    "permanent",
+                    "unspecified"
+                  ]
+                },
+                "live_requested": {
+                  "type": "boolean"
+                },
+                "infrastructure_qualified": {
+                  "type": "boolean"
+                },
+                "network_ready": {
+                  "const": false
+                },
+                "checks": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "name": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "status": {
+                        "enum": [
+                          "PASS",
+                          "WARN",
+                          "FAIL",
+                          "UNVERIFIED"
+                        ]
+                      },
+                      "message": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "hint": {
+                        "type": "string",
+                        "minLength": 1
+                      },
+                      "required": {
+                        "type": "boolean"
+                      },
+                      "details": {
+                        "type": "object"
+                      }
+                    },
+                    "required": [
+                      "name",
+                      "status",
+                      "message",
+                      "hint",
+                      "required",
+                      "details"
+                    ],
+                    "additionalProperties": false
+                  }
+                },
+                "notice": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              },
+              "required": [
+                "uri",
+                "operating_model",
+                "live_requested",
+                "infrastructure_qualified",
+                "checks",
+                "notice"
+              ],
+              "additionalProperties": false
+            }
+          },
+          "required": [
+            "host"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "error": {
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "properties": {
+            "code": {
+              "type": "string",
+              "pattern": "^[A-Z][A-Z0-9_]*$"
+            },
+            "phase": {
+              "type": "string",
+              "minLength": 1
+            },
+            "message": {
+              "type": "string",
+              "minLength": 1
+            },
+            "hint": {
+              "type": "string",
+              "minLength": 1
+            },
+            "retryable": {
+              "type": "boolean"
+            }
+          },
+          "required": [
+            "code",
+            "phase",
+            "message",
+            "hint",
+            "retryable"
+          ],
+          "additionalProperties": false
+        }
+      ]
+    },
+    "artifacts": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      }
+    }
+  },
+  "required": [
+    "schema_version",
+    "operation_id",
+    "ok",
+    "command",
+    "vm",
+    "state",
+    "data",
+    "error",
+    "artifacts"
+  ],
+  "additionalProperties": false,
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "vmctl result v1 (P09-A)",
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "ok": {
+            "const": true
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "error": {
+            "type": "null"
+          },
+          "state": {
+            "enum": [
+              "validated",
+              "planned",
+              "completed"
+            ]
+          }
+        }
+      },
+      "else": {
+        "properties": {
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "pattern": "^[A-Z][A-Z0-9_]*$"
+              },
+              "phase": {
+                "type": "string",
+                "minLength": 1
+              },
+              "message": {
+                "type": "string",
+                "minLength": 1
+              },
+              "hint": {
+                "type": "string",
+                "minLength": 1
+              },
+              "retryable": {
+                "type": "boolean"
+              }
+            },
+            "required": [
+              "code",
+              "phase",
+              "message",
+              "hint",
+              "retryable"
+            ],
+            "additionalProperties": false
+          },
+          "state": {
+            "const": "failed"
+          }
+        }
+      }
+    }
+  ]
+}

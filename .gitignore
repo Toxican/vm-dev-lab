@@ -1,0 +1,46 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Exclude local environments, secrets, build output, and VM artifacts.
+
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+.env.*
+build/
+dist/
+*.egg-info/
+.pytest_cache/
+.coverage
+htmlcov/
+*.qcow2
+*.qcow
+*.img
+*.raw
+*.vmdk
+*.vdi
+*.vhd*
+*.iso
+*.seed
+*.fd
+*.log
+*.tmp
+*.swp
+*~
+local/
+config.local.*
+*.local.yaml
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+.ssh/
+id_ecdsa*
+id_dsa*
+*.p12
+*.pfx
+secrets/
+
+# Local public release workspace
+/release/

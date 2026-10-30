@@ -1,0 +1,336 @@
+{
+  "type": "object",
+  "properties": {
+    "schema_version": {
+      "type": "integer",
+      "const": 1
+    },
+    "ready": {
+      "type": "boolean"
+    },
+    "vm": {
+      "type": "object",
+      "properties": {
+        "name": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[a-z][a-z0-9-]{0,62}$"
+        },
+        "guest_os": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 256,
+          "pattern": "^[a-z][a-z0-9-]{0,62}$"
+        },
+        "architecture": {
+          "enum": [
+            "x86_64"
+          ]
+        },
+        "install": {
+          "type": "object",
+          "properties": {
+            "method": {
+              "enum": [
+                "cloud-image",
+                "iso"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "method"
+          ]
+        },
+        "base_image": {
+          "type": "object",
+          "properties": {
+            "path": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 4096
+            },
+            "sha256": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[0-9a-fA-F]{64}$"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "path",
+            "sha256"
+          ]
+        },
+        "cpus": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 256
+        },
+        "memory_mib": {
+          "type": "integer",
+          "minimum": 256,
+          "maximum": 1048576
+        },
+        "disk_gib": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 16384
+        },
+        "network": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "libvirt"
+            },
+            "name": {
+              "type": [
+                "string",
+                "null"
+              ],
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[a-z][a-z0-9-]{0,62}$"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "name"
+          ]
+        },
+        "firmware": {
+          "type": "object",
+          "properties": {
+            "type": {
+              "const": "uefi"
+            },
+            "secure_boot": {
+              "const": false,
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "secure_boot"
+          ]
+        },
+        "packages": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 128,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9@+_.:-]*$"
+          },
+          "uniqueItems": true,
+          "maxItems": 256
+        },
+        "ssh": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "user": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 256,
+              "pattern": "^[a-z_][a-z0-9_-]{0,31}$"
+            },
+            "password_authentication": {
+              "const": false,
+              "type": "boolean"
+            },
+            "public_keys": {
+              "type": "array",
+              "items": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 16384
+              },
+              "uniqueItems": true,
+              "maxItems": 32
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "user",
+            "password_authentication",
+            "public_keys"
+          ]
+        },
+        "usb": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "devices": {
+              "type": "array",
+              "items": {
+                "type": "object",
+                "properties": {
+                  "vendor_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^[0-9a-fA-F]{4}$"
+                  },
+                  "product_id": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 256,
+                    "pattern": "^[0-9a-fA-F]{4}$"
+                  },
+                  "enabled": {
+                    "type": "boolean"
+                  },
+                  "serial": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "minLength": 1,
+                    "maxLength": 256
+                  }
+                },
+                "additionalProperties": false,
+                "required": [
+                  "vendor_id",
+                  "product_id",
+                  "enabled",
+                  "serial"
+                ]
+              },
+              "maxItems": 32
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "devices"
+          ]
+        },
+        "snapshots": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "mode": {
+              "const": "offline-bundle"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "mode"
+          ]
+        },
+        "graphical": {
+          "type": "object",
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "acceleration": {
+              "type": "boolean"
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "acceleration"
+          ]
+        },
+        "audio": {
+          "type": "object",
+          "properties": {
+            "mode": {
+              "enum": [
+                "disabled",
+                "spice",
+                "usb"
+              ]
+            }
+          },
+          "additionalProperties": false,
+          "required": [
+            "mode"
+          ]
+        },
+        "shares": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "source": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096
+              },
+              "target": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 4096,
+                "pattern": "^/[A-Za-z0-9_./-]+$"
+              },
+              "read_only": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false,
+            "required": [
+              "source",
+              "target",
+              "read_only"
+            ]
+          },
+          "maxItems": 16
+        }
+      },
+      "additionalProperties": false,
+      "required": [
+        "name",
+        "guest_os",
+        "architecture",
+        "install",
+        "base_image",
+        "cpus",
+        "memory_mib",
+        "disk_gib",
+        "network",
+        "firmware",
+        "packages",
+        "ssh",
+        "usb",
+        "snapshots",
+        "graphical",
+        "audio",
+        "shares"
+      ]
+    }
+  },
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "ready",
+    "vm"
+  ],
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "vm-dev-lab resolved configuration v1 (offline)"
+}

@@ -1,0 +1,7 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Render NoCloud instance identity metadata.
+
+instance-id: {{ instance_id | tojson }}
+local-hostname: {{ vm_name | tojson }}
+dsmode: local

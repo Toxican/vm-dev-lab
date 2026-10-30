@@ -1,0 +1,83 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Document every supported configuration field for a CachyOS guest.
+
+# This is a portable, deliberately incomplete base template. Copy or extend it
+# from <private-config-root>/profiles/<name>.yaml and provide host-qualified
+# values there. CachyOS guest provisioning is not thereby operationally proven;
+# `ready: true` is only an explicit creation approval for a completed profile.
+schema_version: 1
+ready: false
+
+vm:
+  # Required local instance identity: [a-z][a-z0-9-]{0,62}.
+  name: null
+  guest_os: cachyos
+  architecture: x86_64  # The configuration schema currently supports x86_64 only.
+
+  install:
+    # `iso` is reserved by the schema but is not executable in version 0.5.0.
+    method: cloud-image
+
+  base_image:
+    # Relative paths are resolved against the YAML file that declares them.
+    # A local profile should reference an image imported into its private cache.
+    path: null
+    # Exactly 64 hexadecimal characters for the reviewed image content.
+    sha256: null
+
+  # Requested guest resources; host admission can impose lower effective limits.
+  cpus: 2
+  memory_mib: 4096
+  disk_gib: 30
+
+  network:
+    type: libvirt  # The only supported network backend.
+    # Must name a pre-existing, explicitly assigned libvirt network.
+    name: null
+
+  firmware:
+    type: uefi
+    secure_boot: false  # Secure Boot is not supported by schema version 1.
+
+  # Lists replace inherited lists completely; they are never merged.
+  packages:
+    - git
+    - base-devel
+
+  ssh:
+    enabled: true
+    user: developer  # Root login is rejected.
+    password_authentication: false  # Password login cannot be enabled.
+    # Additional public keys only. The lifecycle creates its own client identity.
+    public_keys: []
+
+  snapshots:
+    enabled: true
+    mode: offline-bundle  # The only supported snapshot representation.
+
+  graphical:
+    enabled: false
+    # Acceleration may be true only when graphical.enabled is also true.
+    acceleration: false
+
+  audio:
+    # Supported values: disabled, spice, usb. SPICE requires graphics; USB audio
+    # additionally requires global and per-device USB activation.
+    mode: disabled
+
+  shares: []
+    # Example; enabling a host share requires an explicitly reviewed local path.
+    # - source: ../shared
+    #   target: /workspace
+    #   read_only: true
+
+  usb:
+    # USB needs both this global opt-in and enabled: true on a selected device.
+    enabled: false
+    devices: []
+      # Example identifiers are four hexadecimal characters; serial may be null.
+      # - vendor_id: "1234"
+      #   product_id: "abcd"
+      #   enabled: false
+      #   serial: null

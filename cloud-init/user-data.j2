@@ -1,0 +1,17 @@
+#cloud-config
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Render NoCloud SSH access and optional guest package configuration.
+
+# Illustrative Jinja template; operational P05 renderer: provisioning/cloudinit.py.
+users:
+  - name: {{ ssh_user | tojson }}
+    lock_passwd: true
+    shell: /bin/bash
+    ssh_authorized_keys: {{ ssh_public_keys | tojson }}
+ssh_pwauth: false
+disable_root: true
+package_update: false
+{% if packages %}
+packages: {{ packages | tojson }}
+{% endif %}
