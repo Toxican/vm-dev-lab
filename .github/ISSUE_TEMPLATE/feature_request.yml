@@ -1,0 +1,59 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Collect focused feature and improvement proposals.
+
+name: Feature request
+description: Propose a focused capability or improvement.
+title: "[Feature]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Feature proposals help guide the project, but submitting a proposal is not an implementation commitment or support guarantee.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem to solve
+      description: Describe the concrete limitation or workflow problem.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed feature or improvement
+      description: Describe the desired behavior without assuming a specific implementation where possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: benefit
+    attributes:
+      label: Expected benefit
+      description: Explain who benefits and how the proposal improves the current workflow.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Describe existing workarounds or other approaches, if any.
+    validations:
+      required: false
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - vmctl
+        - host-setup
+        - Installation or packaging
+        - Documentation
+        - Project-wide
+        - Other
+    validations:
+      required: true

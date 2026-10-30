@@ -1,0 +1,117 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Collect reproducible and safely redacted bug reports.
+
+name: Bug report
+description: Report a reproducible defect in vm-dev-lab.
+title: "[Bug]: "
+labels: []
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for helping improve vm-dev-lab.
+
+        Do not publish passwords, private keys, credentials, sensitive host data, or confidential log excerpts. Redact private paths, addresses, UUIDs, user names, and similar local identifiers.
+
+        If this may be an exploitable security vulnerability, stop and follow [SECURITY.md](https://github.com/Toxican/vm-dev-lab/security/policy) instead of submitting a public issue.
+
+  - type: textarea
+    id: summary
+    attributes:
+      label: Bug summary
+      description: Briefly describe what went wrong.
+      placeholder: A concise description of the defect.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - vmctl
+        - host-setup
+        - Installation or packaging
+        - Documentation
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Provide the smallest safe sequence that reproduces the problem.
+      placeholder: |
+        1. Run ...
+        2. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What should have happened?
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: What happened instead, including stable error or exit codes where available?
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: Version or commit
+      description: Provide the vm-dev-lab version or full commit hash.
+      placeholder: 0.5.0 or a full commit hash
+    validations:
+      required: true
+
+  - type: textarea
+    id: environment
+    attributes:
+      label: Host distribution and relevant environment
+      description: Include only relevant, non-sensitive platform, Python, QEMU, or libvirt details.
+      placeholder: Arch Linux x86_64, Python version, relevant component versions
+    validations:
+      required: true
+
+  - type: dropdown
+    id: operation_scope
+    attributes:
+      label: Operation scope
+      description: Indicate whether the defect concerns isolated offline testing or real operations.
+      options:
+        - Offline tests only
+        - Real VM operations
+        - Real host operations
+        - Both real VM and host operations
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Relevant logs or diagnostics
+      description: Paste only the minimal redacted output needed to understand the defect.
+      render: shell
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: safety
+    attributes:
+      label: Safety checks
+      options:
+        - label: I removed secrets, credentials, private keys, sensitive host data, and confidential log content.
+          required: true
+        - label: I reviewed SECURITY.md and this public report does not disclose an exploitable vulnerability.
+          required: true

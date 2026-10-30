@@ -30,7 +30,10 @@ See [docs/REQUIREMENTS.md](docs/REQUIREMENTS.md) for the complete tool matrix.
 - Report failures honestly; failed or unimplemented actions must not claim
   success.
 - Add tests for relevant failure, ownership, and recovery cases.
+- Cover new features and behavior changes with offline tests; keep any separately
+  authorized real host or VM validation explicit and bounded.
 - Update public documentation when observable behavior changes.
+- Write publicly visible documentation, comments, and docstrings in English.
 - Declare Python dependencies only in `pyproject.toml` and document their
   purpose in `docs/REQUIREMENTS.md`.
 
@@ -41,6 +44,16 @@ committed.
 Contributions to project-owned code must be publishable under the MIT project
 license. Do not remove notices belonging to other authors or represent their
 rights as project-owned.
+
+## Issues and security reports
+
+Use the configured issue forms for bugs, feature proposals, and documentation
+problems so reports contain the evidence needed for review. A feature proposal
+does not create an implementation or support commitment.
+
+Do not disclose exploitable vulnerabilities or sensitive diagnostics in a
+public issue. Follow [SECURITY.md](SECURITY.md) and verify that GitHub offers a
+private reporting option before sharing sensitive details.
 
 ## Branches and pull requests
 

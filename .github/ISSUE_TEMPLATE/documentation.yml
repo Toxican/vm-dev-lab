@@ -1,0 +1,41 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Collect precise documentation corrections and improvements.
+
+name: Documentation issue
+description: Report incorrect, missing, or unclear public documentation.
+title: "[Docs]: "
+labels: []
+body:
+  - type: input
+    id: location
+    attributes:
+      label: Document or URL
+      description: Identify the affected file, section, or public URL.
+      placeholder: docs/INSTALLATION.md or a public documentation URL
+    validations:
+      required: true
+
+  - type: textarea
+    id: passage
+    attributes:
+      label: Incorrect or unclear passage
+      description: Quote a short passage or describe precisely what is missing or unclear.
+    validations:
+      required: true
+
+  - type: textarea
+    id: correction
+    attributes:
+      label: Expected correction
+      description: Explain what the documentation should state or clarify.
+    validations:
+      required: true
+
+  - type: textarea
+    id: suggestion
+    attributes:
+      label: Optional improvement suggestion
+      description: Suggest wording, structure, or an example if useful.
+    validations:
+      required: false

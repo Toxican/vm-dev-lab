@@ -1,0 +1,12 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Route public issue creation to documentation and safe reporting guidance.
+
+blank_issues_enabled: false
+contact_links:
+  - name: Project documentation
+    url: https://github.com/Toxican/vm-dev-lab/tree/main/docs
+    about: Review the installation, command, host-setup, and architecture documentation.
+  - name: Security vulnerability reporting
+    url: https://github.com/Toxican/vm-dev-lab/security/policy
+    about: Read SECURITY.md and verify that a private reporting option is available before sharing sensitive details.
