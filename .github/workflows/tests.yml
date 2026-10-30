@@ -1,0 +1,106 @@
+# SPDX-License-Identifier: MIT
+# Copyright (c) 2026 André Manz
+# Purpose: Run offline tests and packaging checks on GitHub-hosted runners.
+
+name: Offline CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  offline-tests:
+    name: Python ${{ matrix.python-version }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version:
+          - "3.10"
+          - "3.12"
+          - "3.13"
+
+    steps:
+      - name: Check out the public source tree
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install test and build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install "setuptools>=77" wheel
+          python -m pip install .
+
+      - name: Check Python syntax
+        run: python -m compileall -q src tests
+
+      - name: Run the offline test suite
+        run: python -m unittest discover -s tests -v
+
+      - name: Build the wheel
+        run: python -m pip wheel . --no-deps --no-build-isolation --wheel-dir dist
+
+      - name: Verify wheel metadata and contents
+        run: |
+          python - <<'PY'
+          from email.parser import BytesParser
+          from pathlib import Path
+          from zipfile import ZipFile
+
+          from vm_dev_lab.version import VERSION
+
+          wheels = list(Path("dist").glob("*.whl"))
+          if len(wheels) != 1:
+              raise SystemExit(f"Expected exactly one wheel, found {len(wheels)}")
+
+          with ZipFile(wheels[0]) as archive:
+              names = set(archive.namelist())
+              metadata_name = next(
+                  name for name in names if name.endswith(".dist-info/METADATA")
+              )
+              entry_points_name = next(
+                  name for name in names if name.endswith(".dist-info/entry_points.txt")
+              )
+              metadata = BytesParser().parsebytes(archive.read(metadata_name))
+              entry_points = archive.read(entry_points_name).decode("utf-8")
+
+          if metadata["Name"] != "vm-dev-lab":
+              raise SystemExit("Unexpected package name")
+          if metadata["Version"] != VERSION:
+              raise SystemExit("Wheel version does not match the package version")
+          if metadata["License-Expression"] != "MIT":
+              raise SystemExit("Wheel does not declare the MIT SPDX expression")
+          if not any(name.endswith(".dist-info/licenses/LICENSE") for name in names):
+              raise SystemExit("Wheel does not contain LICENSE")
+          if "vmctl = vm_dev_lab.cli:main" not in entry_points:
+              raise SystemExit("Wheel does not contain the vmctl entry point")
+          if "host-setup = vm_dev_lab.host_setup.cli:main" not in entry_points:
+              raise SystemExit("Wheel does not contain the host-setup entry point")
+          for schema in (
+              "vm_dev_lab/schema.json",
+              "vm_dev_lab/result-schema.json",
+              "vm_dev_lab/host_setup/result-schema.json",
+          ):
+              if schema not in names:
+                  raise SystemExit(f"Wheel does not contain {schema}")
+          PY
+
+      - name: Check installed CLI entry points
+        run: |
+          vmctl --version
+          vmctl --help
+          host-setup --version
+          host-setup --help
