@@ -6,20 +6,6 @@ the project's early development stage.
 
 ## 0.5.0 – Initial Public Release (2026-10-30)
 
-### Added
-
-- Declarative JSON Schema validation for profiles and templates.
-- Trust-verified, content-addressed import of local base images.
-- A guarded libvirt lifecycle for Create, Start, Stop, Restart, Status, and
-  Destroy, backed by a registry, locks, and operation journals.
-- An Arch Linux guest adapter with NoCloud, pinned SSH host keys, and
-  provisioning.
-- Immutable baselines and a two-stage transactional restore workflow.
-- Resource accounting for vCPU, memory, and storage budgets.
-- Bounded logs, conservative recovery, argv-safe `exec`, and SFTP-based `copy`.
-- An experimental Arch host assistant for package, environment, network, and
-  storage planning with confirmed apply and ownership-safe uninstall.
-
 ### Security
 
 - Unrelated or incompletely bound libvirt resources are neither adopted nor
